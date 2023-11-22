@@ -40,11 +40,18 @@ target_include_directories(${TARGET_NAME}
     $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/exports>
   PRIVATE 
     ${TARGET_INCLUDE_FOLDER}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../tcnart/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
     # Any other extra include required
 )
 
-# link against tcnart
+# link
 target_link_libraries(${TARGET_NAME} PUBLIC
-        tcnart
+        opencv_core
+        opencv_imgproc
+        opencv_objdetect
+        opencv_aruco
+        opencv_videoio
+        opencv_highgui
+        rapidjson
+        poph264::poph264
 )

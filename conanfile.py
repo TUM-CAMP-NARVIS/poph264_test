@@ -46,7 +46,6 @@ class PopH264TestConan(ConanFile):
         "opencv/*:with_msmf": False,
         "opencv/*:with_msmf_dxva": False,
         "opencv/*:with_opengl": False,
-        # "opencv/*:cuda_arch_bin": None,
         "opencv/*:cpu_baseline": None,
         "opencv/*:cpu_dispatch": None,
         "opencv/*:nonfree": False,    
@@ -55,15 +54,10 @@ class PopH264TestConan(ConanFile):
     # all sources are deployed with the package
     exports_sources = "cmake/*", "src/*", "CMakeLists.txt"
 
-    @property
-    def is_platform_win(self):
-        return self.settings.os == "Windows" or self.settings.os == "WindowsStore"
-
-
     def requirements(self):
         self.requires("spdlog/1.11.0")
         self.requires("rapidjson/cci.20220822")
-        self.requires("opencv/4.8.0@camposs/stable", override=True)
+        self.requires("opencv/4.8.0@camposs/stable")
         self.requires("poph264/1.9.2@camposs/stable")
 
     def configure(self):

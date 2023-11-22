@@ -1,6 +1,7 @@
 # Dependencies
 find_package(Threads REQUIRED)
 find_package(OpenCV COMPONENTS opencv_core opencv_imgproc opencv_objdetect opencv_aruco opencv_videoio opencv_highgui REQUIRED)
+find_package(RapidJSON REQUIRED)
 find_package(poph264 REQUIRED)
 
 set(TCN_PLATFORM_DEPS)
