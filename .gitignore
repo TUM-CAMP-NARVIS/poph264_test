@@ -1,0 +1,7 @@
+build/
+cmake-build-*/
+.idea/
+packages/
+*.pyc
+.vscode
+CMakeUserPresets.json
