@@ -268,20 +268,17 @@ int main() {
 				exit(1);
 			}
 
-			// max wait time ??
-			int data_size{ 0 };
-			// int encode_duration_ms{0};
-			// int delay_duration_ms{0};
-			int output_queue_count{ 0 };
-			std::string encoder_name;
-
-
 			// try to get output for maximum of n ms
 			bool all_data_fetched{ false };
 			auto stop_t = system_clock::now() + milliseconds(200);
 			while (stop_t > system_clock::now() && !all_data_fetched) {
-				// Pop frame from decoder (re-try n-times / with timeout until data is
-				// available)
+
+				int encode_duration_ms{0};
+				int delay_duration_ms{0};
+				int data_size{ 0 };
+				int output_queue_count{ 0 };
+				std::string encoder_name;
+
 				JsonBuffer = { 0 };
 				PopH264_EncoderPeekData(encoder_handle, JsonBuffer.data(),
 					static_cast<int32_t>(JsonBuffer.size()));
@@ -293,12 +290,12 @@ int main() {
 					if (d.HasMember("DataSize")) {
 						data_size = d["DataSize"].GetInt();
 					}
-					//if (d.HasMember("EncodeDurationMs")) {
-					//	encode_duration_ms = d["EncodeDurationMs"].GetInt();
-					//}
-					//if (d.HasMember("DelayDurationMs")) {
-					//	delay_duration_ms = d["DelayDurationMs"].GetInt();
-					//}
+					if (d.HasMember("EncodeDurationMs")) {
+						encode_duration_ms = d["EncodeDurationMs"].GetInt();
+					}
+					if (d.HasMember("DelayDurationMs")) {
+						delay_duration_ms = d["DelayDurationMs"].GetInt();
+					}
 					if (d.HasMember("OutputQueueCount")) {
 						output_queue_count = d["OutputQueueCount"].GetInt();
 					}
@@ -337,13 +334,18 @@ int main() {
 					break;
 				}
 
+				// stop if we retrieved all frames
+				all_data_fetched = output_queue_count == 1;
+
 				// forward the data in buff/bytes_written to the application
-				std::cout << "Got Encoded Frame with size: " << bytes_written << std::endl;
+				std::cout << "Got Encoded Frame with size: " << bytes_written << " queue-count: " << output_queue_count << " data-fetched: " << all_data_fetched << std::endl;
 				buff.reset();
 
-				// stop if we retrieved all frames
-				all_data_fetched = output_queue_count == 0;
+				if (all_data_fetched) {
+					break;
+				}
 			}
+
 
 			if (!all_data_fetched) {
 				std::cout << "Encoder: encoder did not produce data within the required amount of time." << std::endl;
