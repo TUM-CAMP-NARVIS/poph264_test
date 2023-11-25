@@ -11,6 +11,11 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/videoio.hpp>
 
+#ifdef WIN32
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#endif
 
 // copied from:
 // https://github.com/NewChromantics/SoyLib/blob/a32d484eb0e15575d2a9db7f5c02f2d2dfb4100c/src/SoyPixels.h
@@ -97,6 +102,16 @@ inline std::vector<std::string> splitLines(const std::string& str) {
 int main() {
 	using namespace std::chrono;
 
+
+#ifdef WIN32
+	_CrtSetDbgFlag(
+		_CRTDBG_ALLOC_MEM_DF |
+		_CRTDBG_LEAK_CHECK_DF);  // This is used to auto output memory information
+	// about leaks before closing the application
+	_CrtSetReportMode(
+		_CRT_WARN,
+		_CRTDBG_MODE_DEBUG);  // Set to output into your IDE's debug window
+#endif
 
 	// setup opencv capture
 
@@ -270,6 +285,7 @@ int main() {
 
 			// try to get output for maximum of n ms
 			bool all_data_fetched{ false };
+			bool is_first_iteration{ false };
 			auto stop_t = system_clock::now() + milliseconds(200);
 			while (stop_t > system_clock::now() && !all_data_fetched) {
 
@@ -311,12 +327,22 @@ int main() {
 					}
 				}
 
-				if (data_size == 0 || output_queue_count == 0) {
+				if ((data_size == 0) && is_first_iteration){
 					// wait for 5ms before polling again
 					std::this_thread::sleep_for(milliseconds(5));
 					continue;
 				}
-				
+
+				if (is_first_iteration) {
+					is_first_iteration = false;
+				}
+
+				all_data_fetched = output_queue_count == 0;
+				if (all_data_fetched) {
+					break;
+				}
+
+
 				// retrieve encoded buffer
 				auto buff = std::make_unique<std::byte[]>(data_size);
 				auto bytes_written = PopH264_EncoderPopData(
@@ -335,23 +361,11 @@ int main() {
 				}
 
 				// stop if we retrieved all frames
-				all_data_fetched = output_queue_count == 1;
 
 				// forward the data in buff/bytes_written to the application
 				std::cout << "Got Encoded Frame with size: " << bytes_written << " queue-count: " << output_queue_count << " data-fetched: " << all_data_fetched << std::endl;
 				buff.reset();
-
-				if (all_data_fetched) {
-					break;
-				}
 			}
-
-
-			if (!all_data_fetched) {
-				std::cout << "Encoder: encoder did not produce data within the required amount of time." << std::endl;
-				//continue;
-			}
-
 
 			// also show the image to see that it's running
 			cv::imshow("live", frame);
